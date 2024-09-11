@@ -42,7 +42,27 @@ This uncertainty in conceptual understanding might have some impact on the final
 ## Null Rates
 
 The following variables had a non zero null rate:
-* `CurrentBalance`
-* `NumberOfMatches`
-* `ErrorRate`
-* `IsNameBased`
+
+* `CurrentBalance` (26%)
+* `NumberOfMatches` (28%)
+* `ErrorRate` (28%)
+* `IsNameBased` (28%)
+
+The last 3 features all pertain to the ML models used to identify paychecks. They have very low associations with the default rate and other variables across the dataset and would likely end up being removed from the analysis, so their high null rates could not matter.
+
+(Note that this is an educated guess that I am making based on preliminary analysis, but additional tests during the modeling stage may reveal otherwise)
+
+While `CurrentBalance` also only exhibits some weak associations with the default rate, intuitively, it would seem like a good candidate for non linear relationships to the rate. So the high amount of null values in that column is concerning.
+
+Once again, this is something that will be tested later on in the modelling stage. But the bimodal tendencies of this variable (shown below) would seem to indicate that a simple mean or median imputatino for null values may not be good enough, should this variable be important.
+
+![current-balance-dist](./images/current-balance-dist.png)
+
+
+This is because the distribution of non defaulted and defaulted appear to be slighlty different with the bimodal aspect of the non defaulted records being much more pronounced. So this could in theory require a more complex imputation, since a simple mean imputation could introduce some bias.
+
+## General Patterns
+
+As mentioned in the summary, there were no obvious patterns with the default rate that emerged. That is to say that no single feature demonstrated a strong correlation with the default rate. However, as seen in the distribution chart below, some of the high level patterns that emerge are very intuitive. And this could indicate that while standalone features may not be perfect predictors, perhaps some non linear combinations might work.
+
+![float-dist](./images/float-dist.png)
