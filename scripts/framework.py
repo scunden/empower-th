@@ -65,14 +65,14 @@ class ModelFramework():
         return val_auc, best_model, optimal_t
     
     def generate_learning_curves(self, iterations, train_auc, val_auc):
-        fig, ax = plt.subplots(figsize=(12,6))
-        ax.plot(iterations, train_auc, label='training')
-        ax.plot(iterations, val_auc, label='validation')
-        ax.set_title('Learning Curve')
-        ax.set_xlabel('Iterations')
-        ax.set_ylabel('AUC')
-        ax.legend()
         if self.save:
+            fig, ax = plt.subplots(figsize=(12,6))
+            ax.plot(iterations, train_auc, label='training')
+            ax.plot(iterations, val_auc, label='validation')
+            ax.set_title('Learning Curve')
+            ax.set_xlabel('Iterations')
+            ax.set_ylabel('AUC')
+            ax.legend()
             plt.savefig('reports/images/learning-curves.png', dpi=300, bbox_inches='tight')
             plt.close()
     
@@ -80,14 +80,17 @@ class ModelFramework():
         y_val_preds_proba = model.predict_proba(X_val)[:,1]
         fpr, tpr, _ = roc_curve(y_val, y_val_preds_proba)
         auc = roc_auc_score(y_val, y_val_preds_proba)
-
-        fig, ax = plt.subplots(figsize=(6,4))
-        ax.plot(fpr, tpr, label=f'ROC Curve {auc}')
-        ax.set_xlabel('False Positive Rate')
-        ax.set_ylabel('True Positive Rate')
-        ax.plot([0,1],[0,1], color='red', linestyle='--')
-        fig.legend()
+            
         if self.save:
+            
+
+            fig, ax = plt.subplots(figsize=(6,4))
+            ax.plot(fpr, tpr, label=f'ROC Curve {auc}')
+            ax.set_xlabel('False Positive Rate')
+            ax.set_ylabel('True Positive Rate')
+            ax.plot([0,1],[0,1], color='red', linestyle='--')
+            fig.legend()
+        
             plt.savefig('reports/images/roc-curves.png', dpi=300, bbox_inches='tight')
             plt.close()
         
@@ -96,14 +99,16 @@ class ModelFramework():
     def generate_pr_curve(self, model, X_val, y_val):
         y_val_preds_proba = model.predict_proba(X_val)[:,1]
         precision_val, recall_val, t_val = precision_recall_curve(y_val, y_val_preds_proba)
-        fig, ax = plt.subplots(figsize=(12,6))
-        ax.plot(t_val, precision_val[:-1], label='Precision')
-        ax.plot(t_val, recall_val[:-1], label='Recall')
-        ax.set_title('PR Curve')
-        ax.set_xlabel('Thresholds')
-        ax.set_ylabel('Metrics')
-        ax.legend()
+            
         if self.save:
+            
+            fig, ax = plt.subplots(figsize=(12,6))
+            ax.plot(t_val, precision_val[:-1], label='Precision')
+            ax.plot(t_val, recall_val[:-1], label='Recall')
+            ax.set_title('PR Curve')
+            ax.set_xlabel('Thresholds')
+            ax.set_ylabel('Metrics')
+            ax.legend()
             plt.savefig('reports/images/pr-curves.png', dpi=300, bbox_inches='tight')
             plt.close()
         
