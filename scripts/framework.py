@@ -151,8 +151,8 @@ class ModelFramework():
         explainer = shap.Explainer(model)
         shap_values = explainer.shap_values(X_test)
         
-        shap.summary_plot(shap_values, features=X_test, feature_names=X_test.columns, plot_type="bar", )
         if self.save:
+            shap.summary_plot(shap_values, features=X_test, feature_names=X_test.columns, plot_type="bar", )
             plt.savefig('reports/images/mean-shap.png', dpi=300, bbox_inches='tight')
             plt.close()
         
@@ -169,8 +169,8 @@ class ModelFramework():
         shap_values = explainer(X_test)
         shap.plots.waterfall(shap_values[iloc_idx])
         
-        shap.summary_plot(shap_values, features=X_test, feature_names=X_test.columns, plot_type="bar", )
         if self.save:
+            shap.summary_plot(shap_values, features=X_test, feature_names=X_test.columns, plot_type="bar", )
             plt.savefig('reports/images/shap-example.png', dpi=300, bbox_inches='tight')
             plt.close()
 
