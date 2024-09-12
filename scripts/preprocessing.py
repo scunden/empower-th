@@ -14,18 +14,13 @@ class PreProcessor():
         self.df_raw = pd.read_excel(var.DATA_PATH)
         self.default_drop = list(set(var.REDUNDANT_COLS+var.DROP_COLS+var.SINGLE_VALUE_COLS))
         self.default_impute = var.IMPUTE_NULLS_COLS
-        self.default_dtypes = {
-            'float':var.FLOAT_COLS,
-            'int':var.INT_COLS,
-            'binary':var.BINARY_COLS,
-            'cat':var.CAT_COLS
-        }
+        self.categorical = var.CAT_COLS
         self.seed=seed
     
     def split(self, df, features):
         """Create train, test and val splits for modelling."""
         
-        X, y = df[features], df[var.TARGET_VAR]
+        X, y = df[features], df[var.TARGET_VARIABLE]
         X_temp, X_test, y_temp, y_test = train_test_split(X, y, stratify=y, test_size=0.2, random_state=self.seed)
         X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, stratify=y_temp, test_size=0.2, random_state=self.seed)
         
@@ -41,25 +36,17 @@ class PreProcessor():
         variables = variables if variables is not None else self.default_drop
         return df.drop(columns=variables)
     
-    def categorize(self, df, dtypes=None):
-        """Initilizes categorical column."""
-        
-        dtypes = dtypes if dtypes is not None else self.default_dtypes
-        self.categorical = dtypes['cat']
-        df[self.categorical] = df[self.categorical].fillna("N/A")
-        
-        return df
-    
     def resample(self, df):
         """Resample dataset to provide balanced incidence rate."""
         
-        positive_samples = df.loc[df[var.var.var.TARGET_VAR_VAR_VAR]==1]
+        positive_samples = df.loc[df[var.TARGET_VARIABLE]==1]
         positive_sample_size = positive_samples.shape[0]
-        negative_samples_frac = positive_sample_size/df.loc[df[var.var.var.TARGET_VAR_VAR_VAR]==0].shape[0]
-        negative_samples = df.loc[df[var.var.var.TARGET_VAR_VAR_VAR]==0].sample(frac=negative_samples_frac, random_state = self.seed)
+        negative_samples_frac = positive_sample_size/df.loc[df[var.TARGET_VARIABLE]==0].shape[0]
+        negative_samples = df.loc[df[var.TARGET_VARIABLE]==0].sample(frac=negative_samples_frac, random_state = self.seed)
 
         df_resampled = pd.concat([positive_samples, negative_samples]).sample(frac=1)
-        print(f"{df_resampled.shape[0]} | {df_resampled[var.var.var.TARGET_VAR_VAR_VAR].mean()}")
+        print(f"{df_resampled.shape[0]} | {df_resampled[var.TARGET_VARIABLE].mean()}")
+        
         return df_resampled
     
     def impute(self, df, impute=None):
@@ -80,11 +67,11 @@ class PreProcessor():
         """Encode the categorical variables."""
         
         X_test, X_train, X_val = Xs
-        te = TargetEncoder()
+        self.te = TargetEncoder()
         
-        X_train[self.categorical] = te.fit_transform(X_train[self.categorical], y_train)
-        X_test[self.categorical] = te.transform(X_test[self.categorical])
-        X_val[self.categorical] = te.transform(X_val[self.categorical])
+        X_train[self.categorical] = self.te.fit_transform(X_train[self.categorical], y_train)
+        X_test[self.categorical] = self.te.transform(X_test[self.categorical])
+        X_val[self.categorical] = self.te.transform(X_val[self.categorical])
         
         return X_test, X_train, X_val
     
@@ -92,35 +79,47 @@ class PreProcessor():
         """Scale the features in the dataframe."""
         
         X_test, X_train, X_val = Xs
-        scaler = StandardScaler()
+        self.scaler = StandardScaler()
 
-        X_train = pd.DataFrame(scaler.fit_transform(X_train), index = X_train.index, columns = X_train.columns)
-        X_test = pd.DataFrame(scaler.transform(X_test), index = X_test.index, columns = X_test.columns)
-        X_val = pd.DataFrame(scaler.transform(X_val), index = X_val.index, columns = X_val.columns)
+        X_train = pd.DataFrame(self.scaler.fit_transform(X_train), index = X_train.index, columns = X_train.columns)
+        X_test = pd.DataFrame(self.scaler.transform(X_test), index = X_test.index, columns = X_test.columns)
+        X_val = pd.DataFrame(self.scaler.transform(X_val), index = X_val.index, columns = X_val.columns)
         
         return X_test, X_train, X_val
     
     def reduce_features(self, Xs, n_components=0.8):
         """Apply a PCA feature reduction to reduce cardinality."""
         
-        pca = PCA(n_components=n_components)
+        self.pca = PCA(n_components=n_components)
         X_test, X_train, X_val = Xs
 
-        X_train= pd.DataFrame(pca.fit_transform(X_train), index = X_train.index)
-        X_test = pd.DataFrame(pca.transform(X_test), index = X_test.index)
-        X_val = pd.DataFrame(pca.transform(X_val), index = X_val.index)
+        X_train= pd.DataFrame(self.pca.fit_transform(X_train), index = X_train.index)
+        X_test = pd.DataFrame(self.pca.transform(X_test), index = X_test.index)
+        X_val = pd.DataFrame(self.pca.transform(X_val), index = X_val.index)
         
         return X_test, X_train, X_val
     
-    def pipeline(self, resample=1, impute=1):
+    def run_processes(self, drop=True, impute=True, resample=True, scale=True, reduce=True):
         """Initilizate processes pipeline."""
         
-        drop_variables=1
-        categorize=1
+        df = self.df_raw.copy()
+        if drop:
+            df = self.drop_variables(df)
+        if impute:
+            df = self.impute(df)
+        if resample:
+            df = self.resample(df)
         
-        pass
-    
-    def run(self, df):
-        """Initilization of class instance."""
+        features = [x for x in df.columns if x != var.TARGET_VARIABLE]
+        X_test, X_train, X_val, y_test, y_train, y_val = self.split(df, features)
         
-        pass
+        Xs = X_test, X_train, X_val
+        ys = y_test, y_train, y_val
+        
+        Xs = self.encode_features(Xs, y_train)
+        if scale:
+            Xs = self.scale_features(Xs)
+        if reduce:
+            Xs = self.reduce_features(Xs)
+            
+        return Xs, ys

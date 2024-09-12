@@ -14,7 +14,7 @@ TARGET_VARIABLE='DefaultedAdvances'
 SINGLE_VALUE_COLS = ['AdvanceAmount', 'SuspiciousTransactionCount']
 DROP_COLS = ['NumberOfMatches', 'ErrorRate', 'IsNameBased']
 REDUNDANT_COLS=['CreditAccountCount','LatefeesCount']
-IMPUTE_NULLS_COLS=['CurrentBalance ']
+IMPUTE_NULLS_COLS=['CurrentBalance']
 
 BINARY_COLS=['IsNameBased', 'HasEmpowerBanking']
 INT_COLS=[
