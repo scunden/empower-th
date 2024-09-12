@@ -25,3 +25,5 @@ This phase also revealed that some of the key predictors of defaulting are `Curr
 * First I would focus on fully implementing my frameworks to allow even more flexibility in encoders/scalers selection, and other data pre processing
 * I would also spend a lot more time analyzing the data with an SME and extracting new features
 * I would also want to further explore any bias that may exists in the data - some correlations, while intuitive, may have some adverse impact on certain demographics. For example, `AverageMonthlyDiscretionarySpend` could be an important model feature, but there is a lot of research linking financial discipline to cultural background. So I would definitely want to be a lot more careful about building a productionized model directly around this dataset.
+  
+**Note**: There is one mistake I made - I accidentally coded the resampling process to resample the test set as well. With more time, this is something I would fix.
