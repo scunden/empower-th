@@ -9,16 +9,18 @@ import seaborn as sns
 from sklearn.metrics import precision_recall_curve, roc_auc_score, precision_score, recall_score, accuracy_score, f1_score, roc_curve
 from scripts.utils import variables as var
 import os
+import shap
+
 sns.set_theme()
 
 
 class ModelFramework():
-    def __init__(self, data_process=None, hps=None, seed=42):
-        # print(os.getcwd())
+    def __init__(self, data_process=None, hps=None, seed=42, explain=False):
         self.seed = seed
         self.data_process = data_process if data_process is not None else var.DEFAULT_DATA_PROCESS
         self.hps = hps if hps is not None else var.DEFAULT_HPS 
         self.preprocessor = PreProcessor(seed=self.seed)
+        self.explain=explain
     
     def generate_data(self):
         
@@ -71,6 +73,7 @@ class ModelFramework():
         ax.set_ylabel('AUC')
         ax.legend()
         plt.savefig('reports/images/learning-curves.png', dpi=300, bbox_inches='tight')
+        plt.close()
     
     def generate_roc_curves(self, model, X_val, y_val):
         y_val_preds_proba = model.predict_proba(X_val)[:,1]
@@ -84,6 +87,7 @@ class ModelFramework():
         ax.plot([0,1],[0,1], color='red', linestyle='--')
         fig.legend()
         plt.savefig('reports/images/roc-curves.png', dpi=300, bbox_inches='tight')
+        plt.close()
         
         return auc
     
@@ -98,6 +102,7 @@ class ModelFramework():
         ax.set_ylabel('Metrics')
         ax.legend()
         plt.savefig('reports/images/pr-curves.png', dpi=300, bbox_inches='tight')
+        plt.close()
         
         return t_val, precision_val[:-1], recall_val[:-1]
     
@@ -129,8 +134,35 @@ class ModelFramework():
         grid_search = self.tune(X_train, y_train)
         val_auc, best_model, optimal_t = self.validate(grid_search, X_train, y_train, X_val, y_val)
         test_auc = self.test(best_model, X_test, y_test, optimal_t=optimal_t)
+        if self.explain:
+            self.create_explanations(best_model, X_test, y_test)
         
         return Xs, ys, best_model, optimal_t, val_auc, test_auc
+    
+    def create_explanations(self, model, X_test, y_test):
+        explainer = shap.Explainer(model)
+        shap_values = explainer.shap_values(X_test)
+        
+        shap.summary_plot(shap_values, features=X_test, feature_names=X_test.columns, plot_type="bar", )
+        plt.savefig('reports/images/mean-shap.png', dpi=300, bbox_inches='tight')
+        plt.close()
+        
+        self.shap_example(model, X_test, y_test)
+        
+    def shap_example(self, model, X_test, y_test):
+        y_test_preds_proba = model.predict_proba(X_test)[:,1]
+        res = y_test.to_frame()
+        res['pred'] = y_test_preds_proba
+        loc_idx = res.sort_values('pred', ascending=False).iloc[5].name
+        iloc_idx = X_test.index.get_loc(loc_idx)
+
+        explainer = shap.Explainer(model)
+        shap_values = explainer(X_test)
+        shap.plots.waterfall(shap_values[iloc_idx])
+        
+        shap.summary_plot(shap_values, features=X_test, feature_names=X_test.columns, plot_type="bar", )
+        plt.savefig('reports/images/shap-example.png', dpi=300, bbox_inches='tight')
+        plt.close()
 
 
 def main():
