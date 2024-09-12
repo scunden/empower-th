@@ -4,7 +4,7 @@ I have created a framework that allows for a flexible modeling process. The fram
 
 Note that during this exercise, I focused more on the process rather than the results. So the results below are suboptimal.
 
-* Validation AUC of 0.83 and Test AUC of 0.65
+* Validation AUC of 0.72 and Test AUC of 0.65
 * Precision and Recall at optimal threshold revolved around ~42%
 * The most impactful features were: `feature1`, `feature1`, `feature1`
 

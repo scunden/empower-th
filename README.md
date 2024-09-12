@@ -5,7 +5,7 @@ For this exercise, I chose to build a flexible and adaptable modeling framework 
 * **Phase 0**:  First, I focused on the initial data exploration - during which I found that while mostly clean, the data did have some redundancies, and some skewed distribution that could benefit from scaling. It did have some missing data that would require imputing. 
 * Phase 1: I then built a programmatic and flexible process to transform the data, allowing toggling on and off certain data processes. This became particularly helpful in the final testing phase and in the future can be leverage to find a more optimal model
 
-* **Phase 2**: With this pre processing pipeline in place, I then built a full fledged , explainable modeling framework - from training to validation and testing. I was able to obtain a validation **AUC** of **0.72** but only a test AUC of **0.57**.
+* **Phase 2**: With this pre processing pipeline in place, I then built a full fledged , explainable modeling framework - from training to validation and testing. I was able to obtain a validation **AUC** of **0.72** but only a test AUC of **0.65**.
   
 
 <img src="reports/images/roc-curves.png" alt="mean-shap" width="500"/>

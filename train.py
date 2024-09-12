@@ -15,7 +15,8 @@ def main():
     framework = ModelFramework(
         data_process = data_process,
         explain=True,
-        save=True
+        save=True,
+        seed=100
     )
     
     # Run the framework
