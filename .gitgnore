@@ -1,4 +1,1 @@
 *.xlsx
-*.csv
-*.parquet
-*.pickle
