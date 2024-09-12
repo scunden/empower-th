@@ -16,13 +16,13 @@ sns.set_theme()
 
 
 class ModelFramework():
-    def __init__(self, data_process=None, hps=None, seed=42, explain=False, save=False):
-        self.logger = f.create_logger()
-        self.logger.info('Initializing modeling framework')
+    def __init__(self, data_process=None, hps=None, seed=42, explain=False, save=False, logger=None):
+        self.logger = f.create_logger() if logger is None else logger
+        self.logger.debug('Initializing modeling framework')
         self.seed = seed
         self.data_process = data_process if data_process is not None else var.DEFAULT_DATA_PROCESS
         self.hps = hps if hps is not None else var.DEFAULT_HPS 
-        self.preprocessor = PreProcessor(seed=self.seed)
+        self.preprocessor = PreProcessor(seed=self.seed, logger=self.logger)
         self.explain=explain
         self.save = save
     
@@ -34,7 +34,7 @@ class ModelFramework():
     
     def tune(self, X_train, y_train):
         
-        self.logger.info('Training and tuning model')
+        self.logger.debug('Training and tuning model')
         model = xgb.XGBClassifier(objective = 'binary:logistic', random_state=self.seed)
 
         grid_search = GridSearchCV(
@@ -45,14 +45,14 @@ class ModelFramework():
             )
 
         grid_search.fit(X_train, y_train, verbose=0)
-        self.logger.info(f'Best gridsearch hyperparameters: {grid_search.best_params_}')
-        self.logger.info(f'Best gridsearch training AUC: {grid_search.best_score_}')
+        self.logger.debug(f'Best gridsearch hyperparameters: {grid_search.best_params_}')
+        self.logger.debug(f'Best gridsearch training AUC: {grid_search.best_score_}')
         
         return grid_search
     
     def validate(self, grid_search, X_train, y_train, X_val, y_val):
         
-        self.logger.info('Validating best model')
+        self.logger.debug('Validating best model')
         best_model = xgb.XGBClassifier(
             objective = 'binary:logistic', 
             random_state=self.seed,
@@ -67,8 +67,8 @@ class ModelFramework():
         train_auc = best_model.evals_result()['validation_0']['auc']
         val_auc = best_model.evals_result()['validation_1']['auc']
         
-        self.logger.info(f'Best training AUC: {np.mean(train_auc)}')
-        self.logger.info(f'Best validation AUC: {np.mean(val_auc)}')
+        self.logger.debug(f'Best training AUC: {np.mean(train_auc)}')
+        self.logger.debug(f'Best validation AUC: {np.mean(val_auc)}')
         
         iterations = range(0, len(val_auc))
         self.generate_learning_curves(iterations, train_auc, val_auc)
@@ -80,7 +80,7 @@ class ModelFramework():
     
     def generate_learning_curves(self, iterations, train_auc, val_auc):
         if self.save:
-            self.logger.info(f'Generating learning curves...')
+            self.logger.debug(f'Generating learning curves...')
             fig, ax = plt.subplots(figsize=(12,6))
             ax.plot(iterations, train_auc, label='training')
             ax.plot(iterations, val_auc, label='validation')
@@ -98,7 +98,7 @@ class ModelFramework():
             
         if self.save:
             
-            self.logger.info(f'Generating ROC curves...')
+            self.logger.debug(f'Generating ROC curves...')
             fig, ax = plt.subplots(figsize=(6,4))
             ax.plot(fpr, tpr, label=f'ROC Curve {auc}')
             ax.set_xlabel('False Positive Rate')
@@ -117,7 +117,7 @@ class ModelFramework():
             
         if self.save:
             
-            self.logger.info(f'Generating Precision-Recall curves...')
+            self.logger.debug(f'Generating Precision-Recall curves...')
             fig, ax = plt.subplots(figsize=(12,6))
             ax.plot(t_val, precision_val[:-1], label='Precision')
             ax.plot(t_val, recall_val[:-1], label='Recall')
@@ -135,7 +135,7 @@ class ModelFramework():
         diff = precision - recall
         crossing_index = np.where(np.diff(np.sign(diff)))[0]
         optimal_t = np.mean(t[crossing_index])
-        self.logger.info(f'Optimal threshold for prediction: {optimal_t}')
+        self.logger.debug(f'Optimal threshold for prediction: {optimal_t}')
         
         return optimal_t
 
@@ -147,7 +147,7 @@ class ModelFramework():
         p = precision_score(y_test, y_test_preds)
         r = recall_score(y_test, y_test_preds)
         auc = roc_auc_score(y_test, y_test_preds)
-        self.logger.info(f'Test result: AUC {auc:.2f} |  Precision {p:.2f} |  Recall {r:.2f} | ')
+        self.logger.debug(f'Test result: AUC {auc:.2f} |  Precision {p:.2f} |  Recall {r:.2f} | ')
         
         return auc
     
@@ -170,7 +170,7 @@ class ModelFramework():
         shap_values = explainer.shap_values(X_test)
         
         if self.save:
-            self.logger.info(f'Generating Shap curves...')
+            self.logger.debug(f'Generating Shap curves...')
             plt.figure()  
             shap.summary_plot(shap_values, features=X_test, feature_names=X_test.columns, plot_type="bar", show=False)
             plt.savefig('reports/images/mean-shap.png', dpi=300, bbox_inches='tight')
