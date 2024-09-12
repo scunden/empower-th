@@ -16,7 +16,7 @@ This phase also revealed that some of the key predictors of defaulting are `Curr
 <img src="reports/images/shap-example.png" alt="mean-shap" width="500"/>
 
 
-* **Phase 3**: I then ran a series of tests using both my flexible frameworks to find an optimal configuration of data pre processing. However, this can be expanded to tell a multitude of other aspects, such as feature selection, engineering, model selection and so on. The basic test I ran below reveals that the most impactful selection of data pre processing, does not require feature scaling:
+* **Phase 3**: I then ran a series of tests using both my flexible frameworks to find an optimal configuration of data pre processing. However, this can be expanded to tell a multitude of other aspects, such as feature selection, engineering, model selection and so on. The basic test I ran below reveals that the most impactful selection of data pre processing, does not require feature reduction:
   
 <img src="reports/images/approach-test.png" alt="mean-shap" width="500"/>
 
