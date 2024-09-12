@@ -10,12 +10,15 @@ from sklearn.metrics import precision_recall_curve, roc_auc_score, precision_sco
 from scripts.utils import variables as var
 import os
 import shap
+from scripts.utils import functions as f
 
 sns.set_theme()
 
 
 class ModelFramework():
     def __init__(self, data_process=None, hps=None, seed=42, explain=False, save=False):
+        self.logger = f.create_logger()
+        self.logger.info('Initializing modeling framework')
         self.seed = seed
         self.data_process = data_process if data_process is not None else var.DEFAULT_DATA_PROCESS
         self.hps = hps if hps is not None else var.DEFAULT_HPS 
@@ -30,6 +33,8 @@ class ModelFramework():
         return Xs, ys
     
     def tune(self, X_train, y_train):
+        
+        self.logger.info('Training and tuning model')
         model = xgb.XGBClassifier(objective = 'binary:logistic', random_state=self.seed)
 
         grid_search = GridSearchCV(
@@ -39,11 +44,15 @@ class ModelFramework():
             cv=3,
             )
 
-        grid_search.fit(X_train, y_train)
+        grid_search.fit(X_train, y_train, verbose=0)
+        self.logger.info(f'Best gridsearch hyperparameters: {grid_search.best_params_}')
+        self.logger.info(f'Best gridsearch training AUC: {grid_search.best_score_}')
         
         return grid_search
     
     def validate(self, grid_search, X_train, y_train, X_val, y_val):
+        
+        self.logger.info('Validating best model')
         best_model = xgb.XGBClassifier(
             objective = 'binary:logistic', 
             random_state=self.seed,
@@ -53,9 +62,14 @@ class ModelFramework():
             eval_metric='auc'
             
             )
-        best_model.fit(X_train, y_train, eval_set = [(X_train, y_train), (X_val, y_val)])
+        
+        best_model.fit(X_train, y_train, eval_set = [(X_train, y_train), (X_val, y_val)], verbose=0)
         train_auc = best_model.evals_result()['validation_0']['auc']
         val_auc = best_model.evals_result()['validation_1']['auc']
+        
+        self.logger.info(f'Best training AUC: {np.mean(train_auc)}')
+        self.logger.info(f'Best validation AUC: {np.mean(val_auc)}')
+        
         iterations = range(0, len(val_auc))
         self.generate_learning_curves(iterations, train_auc, val_auc)
         self.generate_roc_curves(best_model, X_val, y_val)
@@ -66,6 +80,7 @@ class ModelFramework():
     
     def generate_learning_curves(self, iterations, train_auc, val_auc):
         if self.save:
+            self.logger.info(f'Generating learning curves...')
             fig, ax = plt.subplots(figsize=(12,6))
             ax.plot(iterations, train_auc, label='training')
             ax.plot(iterations, val_auc, label='validation')
@@ -83,7 +98,7 @@ class ModelFramework():
             
         if self.save:
             
-
+            self.logger.info(f'Generating ROC curves...')
             fig, ax = plt.subplots(figsize=(6,4))
             ax.plot(fpr, tpr, label=f'ROC Curve {auc}')
             ax.set_xlabel('False Positive Rate')
@@ -102,6 +117,7 @@ class ModelFramework():
             
         if self.save:
             
+            self.logger.info(f'Generating Precision-Recall curves...')
             fig, ax = plt.subplots(figsize=(12,6))
             ax.plot(t_val, precision_val[:-1], label='Precision')
             ax.plot(t_val, recall_val[:-1], label='Recall')
@@ -119,6 +135,7 @@ class ModelFramework():
         diff = precision - recall
         crossing_index = np.where(np.diff(np.sign(diff)))[0]
         optimal_t = np.mean(t[crossing_index])
+        self.logger.info(f'Optimal threshold for prediction: {optimal_t}')
         
         return optimal_t
 
@@ -127,9 +144,10 @@ class ModelFramework():
         y_test_preds_proba = model.predict_proba(X_test)[:,1]
         y_test_preds = (y_test_preds_proba>optimal_t).astype(int)
 
-        precision_test = precision_score(y_test, y_test_preds)
-        recall_test = recall_score(y_test, y_test_preds)
+        p = precision_score(y_test, y_test_preds)
+        r = recall_score(y_test, y_test_preds)
         auc = roc_auc_score(y_test, y_test_preds)
+        self.logger.info(f'Test result: AUC {auc:.2f} |  Precision {p:.2f} |  Recall {r:.2f} | ')
         
         return auc
     
@@ -145,13 +163,14 @@ class ModelFramework():
         if self.explain:
             self.create_explanations(best_model, X_test, y_test)
         
-        return Xs, ys, best_model, optimal_t, val_auc, test_auc
+        return test_auc
     
     def create_explanations(self, model, X_test, y_test):
         explainer = shap.Explainer(model)
         shap_values = explainer.shap_values(X_test)
         
         if self.save:
+            self.logger.info(f'Generating Shap curves...')
             plt.figure()  
             shap.summary_plot(shap_values, features=X_test, feature_names=X_test.columns, plot_type="bar", show=False)
             plt.savefig('reports/images/mean-shap.png', dpi=300, bbox_inches='tight')
