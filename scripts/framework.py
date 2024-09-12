@@ -152,11 +152,12 @@ class ModelFramework():
         shap_values = explainer.shap_values(X_test)
         
         if self.save:
-            shap.summary_plot(shap_values, features=X_test, feature_names=X_test.columns, plot_type="bar", )
+            plt.figure()  
+            shap.summary_plot(shap_values, features=X_test, feature_names=X_test.columns, plot_type="bar", show=False)
             plt.savefig('reports/images/mean-shap.png', dpi=300, bbox_inches='tight')
             plt.close()
         
-        self.shap_example(model, X_test, y_test)
+            self.shap_example(model, X_test, y_test)
         
     def shap_example(self, model, X_test, y_test):
         y_test_preds_proba = model.predict_proba(X_test)[:,1]
@@ -164,13 +165,12 @@ class ModelFramework():
         res['pred'] = y_test_preds_proba
         loc_idx = res.sort_values('pred', ascending=False).iloc[5].name
         iloc_idx = X_test.index.get_loc(loc_idx)
-
-        explainer = shap.Explainer(model)
-        shap_values = explainer(X_test)
-        shap.plots.waterfall(shap_values[iloc_idx])
         
         if self.save:
-            shap.summary_plot(shap_values, features=X_test, feature_names=X_test.columns, plot_type="bar", )
+            explainer = shap.Explainer(model)
+            shap_values = explainer(X_test)
+            plt.figure()  
+            shap.plots.waterfall(shap_values[iloc_idx], show=False)
             plt.savefig('reports/images/shap-example.png', dpi=300, bbox_inches='tight')
             plt.close()
 

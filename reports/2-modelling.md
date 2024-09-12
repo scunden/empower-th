@@ -28,13 +28,22 @@ Using the optimal parameters obtained, I re instantiate a model, train it on the
 
 This allowed me to understand if any learning and/or overfitting was happening. In this case, it does look like we're overfitting on the training set and that we don't need that many iterations. However, this does not seem to have a high adverse impact on the validation score
 
+![learning-curves](./images/learning-curves.png)
+
+
 **AUC Curve**
 
 We can see from the curve below that our model has an AUC of 0.71. This is a high level metric that gives us confidence that, at a randomly picked threshold, our model will have a good probability of properly classifying a defaulted case.
 
+![roc-curve](./images/roc-curves.png)
+
+
 **PR Curve**
 
 The PR curves allows us to determine the optimal threshold we need to use for predictions. This threshold can be picked to maximize both precision and recall, or one at the expense of the other, depending on the business case. 
+
+![pr-curve](./images/pr-curves.png)
+
 
 ## Testing
 
@@ -42,7 +51,11 @@ Now that we have validated our model and chosen an optimal threshold, we can app
 
 ## Explainability
 
-Using SHAP values, we are also able to get some insights as to what variable matters the most. At a high level, we see that `feature1`, `feature1`, `feature1` are the most impactful features towards determining whether someone will default.
+Using SHAP values, we are also able to get some insights as to what variable matters the most. At a high level, we see that `CurrentBalance`, `OverdraftTotal`, `AverageMonthlyDiscretionarySpend` are the most impactful features towards determining whether someone will default.
 
-We can also have some more user level insight as to how a given prediction is made
+![mean-shap](./images/mean-shap.png)
 
+
+We can also have some more user level insight as to how a given prediction is made:
+
+![mean-shap](./images/shap-example.png)
