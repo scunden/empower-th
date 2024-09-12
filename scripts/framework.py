@@ -15,12 +15,13 @@ sns.set_theme()
 
 
 class ModelFramework():
-    def __init__(self, data_process=None, hps=None, seed=42, explain=False):
+    def __init__(self, data_process=None, hps=None, seed=42, explain=False, save=False):
         self.seed = seed
         self.data_process = data_process if data_process is not None else var.DEFAULT_DATA_PROCESS
         self.hps = hps if hps is not None else var.DEFAULT_HPS 
         self.preprocessor = PreProcessor(seed=self.seed)
         self.explain=explain
+        self.save = save
     
     def generate_data(self):
         
@@ -56,7 +57,6 @@ class ModelFramework():
         train_auc = best_model.evals_result()['validation_0']['auc']
         val_auc = best_model.evals_result()['validation_1']['auc']
         iterations = range(0, len(val_auc))
-        
         self.generate_learning_curves(iterations, train_auc, val_auc)
         self.generate_roc_curves(best_model, X_val, y_val)
         t, precision, recall = self.generate_pr_curve(best_model, X_val, y_val)
@@ -72,8 +72,9 @@ class ModelFramework():
         ax.set_xlabel('Iterations')
         ax.set_ylabel('AUC')
         ax.legend()
-        plt.savefig('reports/images/learning-curves.png', dpi=300, bbox_inches='tight')
-        plt.close()
+        if self.save:
+            plt.savefig('reports/images/learning-curves.png', dpi=300, bbox_inches='tight')
+            plt.close()
     
     def generate_roc_curves(self, model, X_val, y_val):
         y_val_preds_proba = model.predict_proba(X_val)[:,1]
@@ -86,8 +87,9 @@ class ModelFramework():
         ax.set_ylabel('True Positive Rate')
         ax.plot([0,1],[0,1], color='red', linestyle='--')
         fig.legend()
-        plt.savefig('reports/images/roc-curves.png', dpi=300, bbox_inches='tight')
-        plt.close()
+        if self.save:
+            plt.savefig('reports/images/roc-curves.png', dpi=300, bbox_inches='tight')
+            plt.close()
         
         return auc
     
@@ -101,8 +103,9 @@ class ModelFramework():
         ax.set_xlabel('Thresholds')
         ax.set_ylabel('Metrics')
         ax.legend()
-        plt.savefig('reports/images/pr-curves.png', dpi=300, bbox_inches='tight')
-        plt.close()
+        if self.save:
+            plt.savefig('reports/images/pr-curves.png', dpi=300, bbox_inches='tight')
+            plt.close()
         
         return t_val, precision_val[:-1], recall_val[:-1]
     
@@ -123,7 +126,7 @@ class ModelFramework():
         recall_test = recall_score(y_test, y_test_preds)
         auc = roc_auc_score(y_test, y_test_preds)
         
-        return 
+        return auc
     
     def run(self):
         
@@ -144,8 +147,9 @@ class ModelFramework():
         shap_values = explainer.shap_values(X_test)
         
         shap.summary_plot(shap_values, features=X_test, feature_names=X_test.columns, plot_type="bar", )
-        plt.savefig('reports/images/mean-shap.png', dpi=300, bbox_inches='tight')
-        plt.close()
+        if self.save:
+            plt.savefig('reports/images/mean-shap.png', dpi=300, bbox_inches='tight')
+            plt.close()
         
         self.shap_example(model, X_test, y_test)
         
@@ -161,8 +165,9 @@ class ModelFramework():
         shap.plots.waterfall(shap_values[iloc_idx])
         
         shap.summary_plot(shap_values, features=X_test, feature_names=X_test.columns, plot_type="bar", )
-        plt.savefig('reports/images/shap-example.png', dpi=300, bbox_inches='tight')
-        plt.close()
+        if self.save:
+            plt.savefig('reports/images/shap-example.png', dpi=300, bbox_inches='tight')
+            plt.close()
 
 
 def main():
