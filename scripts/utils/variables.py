@@ -61,17 +61,15 @@ FLOAT_COLS=[
 CAT_COLS=['PaycheckModelUsed']
 
 
-DEFAULT_XGBOOST_HPS = {
-    'max_depth': [3, 10],  # Maximum depth of a tree
-    'learning_rate': [0.001, 0.01, 0.1],  # Step size shrinkage
-    'n_estimators': [100, 1000],  # Number of boosting rounds
-    'min_child_weight': [1, 10],  # Minimum sum of instance weight (hessian) needed in a child
-    'gamma': [0, 0.1, 1],  # Minimum loss reduction required to make a further partition on a leaf node
-    'subsample': [0.5, 1.0],  # Fraction of training instances used to grow trees
-    'colsample_bytree': [1.0],  # Fraction of features used to train each tree
-    'colsample_bylevel': [1.0],  # Fraction of features for each level in each tree
-    'lambda': [0.01, 1],  # L2 regularization term on weights
-    'alpha': [0.01, 1],  # L1 regularization term on weights
-    'scale_pos_weight': [1, 10],  # Control for imbalanced classes
+DEFAULT_DATA_PROCESS={
+    'drop':True, 
+    'impute':True, 
+    'resample':False, 
+    'scale':False, 
+    'reduce':False
 }
-
+DEFAULT_HPS = {
+    'max_depth': [3, 5, 10],  # Maximum depth of a tree
+    'learning_rate': [0.01, 0.1, 1.0],  # Step size shrinkage
+    'n_estimators': [10, 100],  # Number of boosting rounds
+}
